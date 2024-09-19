@@ -1,5 +1,14 @@
 import requests
-import random
+import pandas as pd
+from datetime import datetime
+
+def check_proxy(proxy):
+    try:
+        response = requests.get("https://httpbin.org/ip", proxies={"http": proxy, "https": proxy}, timeout=5)
+        response.raise_for_status()
+        return True  # Прокси работает
+    except requests.exceptions.RequestException:
+        return False  # Прокси не работает
 
 def get_balance(account, proxy):
     url = f"https://pricer.t1rn.io/user/brn/balance?account={account}"
@@ -22,14 +31,33 @@ def read_proxies(file_path):
     with open(file_path, 'r') as file:
         return [line.strip() for line in file.readlines()]
 
+def append_to_csv(data, filename='results.csv'):
+    # Сохраняем данные в CSV
+    df = pd.DataFrame(data)
+    df.to_csv(filename, mode='a', header=not pd.io.common.file_exists(filename), index=False)
+
 if __name__ == "__main__":
     wallets = read_wallets('wallets.txt')
     proxies = read_proxies('proxies.txt')
-    
-    for account in wallets:
-        proxy = random.choice(proxies)  # Выбор случайного прокси
-        balance_info = get_balance(account, proxy)
-        
-        if balance_info is not None:
-            print(f"Balance Information for {account}:")
-            print(balance_info)
+
+    if len(wallets) > len(proxies):
+        print("Warning: Not enough proxies for all accounts. Some accounts may be skipped.")
+
+    for account, proxy in zip(wallets, proxies):
+        if check_proxy(proxy):
+            print(f"Using working proxy: {proxy} for account: {account}")
+            balance_info = get_balance(account, proxy)
+            
+            if balance_info is not None:
+                date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                print(f"Balance Information for {account}: {balance_info}")
+                
+                # Добавляем результат в CSV
+                result = {
+                    'Date': date_now,
+                    'Account': account,
+                    'Balance': balance_info
+                }
+                append_to_csv([result])
+        else:
+            print(f"Proxy {proxy} is not working for account {account}. Skipping...")
