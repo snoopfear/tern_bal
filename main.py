@@ -69,6 +69,6 @@ if __name__ == "__main__":
     if results:
         df_results = pd.DataFrame(results)
         print("\nFinal Results:")
-        print(df_results[['Account', 'Result']])
+        print(df_results[['Account', 'balance_info']])
     else:
         print("No results to display.")
