@@ -58,7 +58,7 @@ if __name__ == "__main__":
                 result = {
                     'Date': date_now,
                     'Account': account,
-                    'Balance': balance_info
+                    'Balance': {balance_info}
                 }
                 append_to_csv([result])
                 results.append({'Account': account, 'Result': balance_info})
