@@ -58,10 +58,10 @@ if __name__ == "__main__":
                 result = {
                     'Date': date_now,
                     'Account': account,
-                    'Balance': balance_info.get('balance', 'N/A')  # Добавляем только значение баланса
+                    'Balance': balance_info
                 }
                 append_to_csv([result])
-                results.append({'Account': account, 'Result': balance_info.get('balance', 'N/A')})
+                results.append({'Account': account, 'Result': balance_info})
         else:
             print(f"Proxy {proxy} is not working for account {account}. Skipping...")
 
