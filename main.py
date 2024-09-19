@@ -61,3 +61,11 @@ if __name__ == "__main__":
                 append_to_csv([result])
         else:
             print(f"Proxy {proxy} is not working for account {account}. Skipping...")
+
+# Печать итоговой таблицы
+    if results:
+        df_results = pd.DataFrame(results)
+        print("\nFinal Results:")
+        print(df_results[['Account', 'Result']])
+    else:
+        print("No results to display.")
