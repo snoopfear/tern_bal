@@ -58,10 +58,10 @@ if __name__ == "__main__":
                 result = {
                     'Date': date_now,
                     'Account': account,
-                    'Balance': {balance_info}
+                    'Balance': balance_info
                 }
                 append_to_csv([result])
-                results.append({'Account': account, 'Result': balance_info})
+                results.append({'Result': balance_info})
         else:
             print(f"Proxy {proxy} is not working for account {account}. Skipping...")
 
@@ -69,6 +69,6 @@ if __name__ == "__main__":
     if results:
         df_results = pd.DataFrame(results)
         print("\nFinal Results:")
-        print(df_results[['Account', 'Result']])
+        print(df_results['Result'])
     else:
         print("No results to display.")
