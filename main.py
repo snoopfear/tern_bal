@@ -2,6 +2,10 @@ import requests
 import pandas as pd
 from datetime import datetime
 
+# ANSI escape codes for colors
+GREEN = '\033[92m'
+RESET = '\033[0m'
+
 def check_proxy(proxy):
     try:
         response = requests.get("https://httpbin.org/ip", proxies={"http": proxy, "https": proxy}, timeout=5)
@@ -18,7 +22,12 @@ def get_balance(account, proxy):
         response.raise_for_status()  # Проверка на успешный ответ
         
         data = response.json()  # Преобразование ответа в JSON
-        return data  # Возвращаем данные о балансе
+        
+        # Вывод полного ответа для проверки
+        print(f"Raw response for account {account}: {data}")
+        
+        # Пример: извлечение баланса из поля 'balance'
+        return data.get('balance', 'N/A')  # Убедитесь, что используете правильный ключ
     except requests.exceptions.RequestException as e:
         print(f"Error fetching balance for account {account} using proxy {proxy}: {e}")
         return None
@@ -47,28 +56,21 @@ if __name__ == "__main__":
 
     for account, proxy in zip(wallets, proxies):
         if check_proxy(proxy):
-            print(f"Using working proxy: {proxy} for account: {account}")
+            print(f"Using working proxy: {proxy} for account: {GREEN}{account}{RESET}")
             balance_info = get_balance(account, proxy)
             
             if balance_info is not None:
                 date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print(f"Balance Information for {account}: {balance_info}")
+                print(f"Balance Information for {GREEN}{account}{RESET}: {GREEN}{balance_info}{RESET}")
                 
                 # Добавляем результат в CSV и в список результатов
                 result = {
                     'Date': date_now,
                     'Account': account,
-                    'Balance': balance_info
+                    'Balance': balance_info  # Убедитесь, что добавляете только значение баланса
                 }
                 append_to_csv([result])
-                results.append({'Result': balance_info})
+                results.append({'Account': account, 'Result': balance_info})
         else:
             print(f"Proxy {proxy} is not working for account {account}. Skipping...")
 
-    # Печать итоговой таблицы
-    if results:
-        df_results = pd.DataFrame(results)
-        print("\nFinal Results:")
-        print(df_results['Result'])
-    else:
-        print("No results to display.")
