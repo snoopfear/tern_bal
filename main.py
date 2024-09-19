@@ -61,7 +61,7 @@ if __name__ == "__main__":
                     'Balance': balance_info
                 }
                 append_to_csv([result])
-                results.append({'Account': account, 'Result': {balance_info}})
+                results.append({'Account': account, 'Result': 'Balance'})
         else:
             print(f"Proxy {proxy} is not working for account {account}. Skipping...")
 
