@@ -43,6 +43,8 @@ if __name__ == "__main__":
     if len(wallets) > len(proxies):
         print("Warning: Not enough proxies for all accounts. Some accounts may be skipped.")
 
+    results = []  # Инициализация переменной results
+
     for account, proxy in zip(wallets, proxies):
         if check_proxy(proxy):
             print(f"Using working proxy: {proxy} for account: {account}")
@@ -52,17 +54,18 @@ if __name__ == "__main__":
                 date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 print(f"Balance Information for {account}: {balance_info}")
                 
-                # Добавляем результат в CSV
+                # Добавляем результат в CSV и в список результатов
                 result = {
                     'Date': date_now,
                     'Account': account,
                     'Balance': balance_info
                 }
                 append_to_csv([result])
+                results.append({'Account': account, 'Result': balance_info})
         else:
             print(f"Proxy {proxy} is not working for account {account}. Skipping...")
 
-# Печать итоговой таблицы
+    # Печать итоговой таблицы
     if results:
         df_results = pd.DataFrame(results)
         print("\nFinal Results:")
