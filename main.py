@@ -144,4 +144,20 @@ if __name__ == "__main__":
                         result = {
                             'Date': date_now,
                             'Account': account,
-                            '
+                            'Network': network,
+                            'Balance': balance_info_network
+                        }
+                        append_to_csv([result])
+                        results.append({'Account': account, 'Results': network_results})
+                    
+                used_proxies.add(proxy)  # Добавляем прокси в набор использованных
+            else:
+                print(f"Proxy {GREEN}{proxy}{RESET} is not working. Skipping...")
+
+    # Печать итоговой таблицы
+    if results:
+        df_results = pd.DataFrame(results)
+        print("\nFinal Results:")
+        print(df_results[['Account', 'Results']])
+    else:
+        print("No results to display.")
