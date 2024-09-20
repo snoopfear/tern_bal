@@ -21,6 +21,10 @@ NETWORK_URLS = {
 def wei_to_eth(wei):
     return wei / 10**18
 
+def format_balance(balance):
+    """Форматирование баланса до двух знаков после запятой."""
+    return f"{balance:.2f}"
+
 def check_proxy(proxy):
     try:
         response = requests.get("https://httpbin.org/ip", proxies={"http": proxy, "https": proxy}, timeout=5)
@@ -52,7 +56,7 @@ def get_balance(account, proxy, network=None):
             balance_wei = int(balance_hex, 16)  # Преобразование из hex в wei
             balance_eth = wei_to_eth(balance_wei)  # Преобразование из wei в eth
 
-            return balance_eth
+            return format_balance(balance_eth)
 
         except requests.exceptions.RequestException as e:
             print(f"Error fetching balance for account {GREEN}{account}{RESET} using proxy {proxy} on network {GREEN}{network}{RESET}: {e}")
@@ -66,7 +70,8 @@ def get_balance(account, proxy, network=None):
             response.raise_for_status()  # Проверка на успешный ответ
 
             data = response.json()  # Преобразование ответа в JSON
-            return data.get('BRNBalance', 'N/A')  # Извлечение баланса из поля 'BRNBalance'
+            balance = data.get('BRNBalance', 'N/A')  # Извлечение баланса из поля 'BRNBalance'
+            return format_balance(float(balance))
 
         except requests.exceptions.RequestException as e:
             print(f"Error fetching balance for account {GREEN}{account}{RESET} using proxy {proxy}: {e}")
@@ -113,7 +118,7 @@ if __name__ == "__main__":
             network_results = {}
 
             if balance_info_pricer is not None:
-                network_results['pricer'] = balance_info_pricer
+                network_results['BRN'] = balance_info_pricer
 
             # Запрос баланса для всех сетей
             for network in NETWORK_URLS:
@@ -126,11 +131,12 @@ if __name__ == "__main__":
                 date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 print(f"\nAccount: {GREEN}{account}{RESET}")
                 
-                if 'pricer' in network_results:
-                    print(f"Balance from pricer: {GREEN}{network_results['pricer']}{RESET}")
+                if 'BRN' in network_results:
+                    print(f"Balance on BRN: {GREEN}{network_results['BRN']}{RESET}")
                 
                 for network, balance in network_results.items():
-                    print(f"Balance on {GREEN}{network}{RESET}: {GREEN}{balance}{RESET}")
+                    if network != 'BRN':  # Пропуск уже выведенного BRN
+                        print(f"Balance on {GREEN}{network}{RESET}: {GREEN}{balance}{RESET}")
                 
                 # Добавляем результат в CSV и в список результатов
                 result = {
