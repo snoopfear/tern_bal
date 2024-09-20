@@ -74,10 +74,3 @@ if __name__ == "__main__":
         else:
             print(f"Proxy {proxy} is not working for account {GREEN}{account}{RESET}. Skipping...")
 
-    # Печать итоговой таблицы
-    if results:
-        df_results = pd.DataFrame(results)
-        print("\nFinal Results:")
-        print(df_results[['Account', 'Result']])
-    else:
-        print("No results to display.")
