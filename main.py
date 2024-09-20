@@ -2,13 +2,17 @@ import requests
 import pandas as pd
 from datetime import datetime
 import json
+import schedule
+import time
 
 # ANSI escape codes for colors
 GREEN = '\033[92m'
 RESET = '\033[0m'
 
-# Ваш API ключ
-API_KEY = "lNTUkf8We6CAI3gpMaBGyPsSz7bRk2U1"
+# Ваш API ключ и токен бота
+API_KEY = ""
+BOT_TOKEN = ""
+CHAT_ID = ""
 
 # URLs для сетей
 NETWORK_URLS = {
@@ -17,6 +21,20 @@ NETWORK_URLS = {
     "base_sepolia": f"https://base-sepolia.g.alchemy.com/v2/{API_KEY}",
     "blast_sepolia": f"https://blast-sepolia.g.alchemy.com/v2/{API_KEY}",
 }
+
+def send_telegram_message(bot_token, chat_id, message):
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        'chat_id': chat_id,
+        'text': message,
+        'parse_mode': 'HTML'
+    }
+    try:
+        response = requests.post(url, data=payload)
+        response.raise_for_status()
+        print(f"Message sent to chat {chat_id}: {message}")
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to send message to Telegram: {e}")
 
 def wei_to_eth(wei):
     return wei / 10**18
@@ -90,7 +108,7 @@ def append_to_csv(data, filename='results.csv'):
     df = pd.DataFrame(data)
     df.to_csv(filename, mode='a', header=not pd.io.common.file_exists(filename), index=False)
 
-if __name__ == "__main__":
+def check_balances_and_send_report():
     wallets = read_wallets('wallets.txt')
     proxies = read_proxies('proxies.txt')
 
@@ -98,9 +116,7 @@ if __name__ == "__main__":
         print("Warning: Not enough proxies for all accounts. Some accounts may be skipped.")
 
     results = []  # Инициализация переменной results
-
-    # Сет для обеспечения уникальности прокси
-    used_proxies = set()
+    message_to_send = ""  # Сообщение для Telegram
 
     # Перебор аккаунтов и прокси
     for i, account in enumerate(wallets):
@@ -131,14 +147,17 @@ if __name__ == "__main__":
                 date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 print(f"\nAccount: {GREEN}{account}{RESET}")
                 
+                # Формирование сообщения для Telegram
+                message_to_send += f"\n<b>Account:</b> {account}\n"
+                
                 if 'BRN' in network_results:
-                    print(f"Balance on BRN: {GREEN}{network_results['BRN']}{RESET}")
+                    message_to_send += f"Balance on BRN: {network_results['BRN']}\n"
                 
                 for network, balance in network_results.items():
                     if network != 'BRN':  # Пропуск уже выведенного BRN
-                        print(f"Balance on {GREEN}{network}{RESET}: {GREEN}{balance}{RESET}")
-                
-                # Добавляем результат в CSV и в список результатов
+                        message_to_send += f"Balance on {network}: {balance}\n"
+
+                # Добавляем результат в CSV
                 result = {
                     'Date': date_now,
                     'Account': account,
@@ -148,3 +167,15 @@ if __name__ == "__main__":
                 results.append({'Account': account, 'Results': network_results})
         else:
             print(f"Proxy {GREEN}{proxy}{RESET} is not working. Skipping...")
+
+    # Отправка итогового сообщения в Telegram
+    if message_to_send:
+        send_telegram_message(BOT_TOKEN, CHAT_ID, message_to_send)
+
+# Планировщик для запуска каждые 60 минут
+schedule.every(60).minutes.do(check_balances_and_send_report)
+
+if __name__ == "__main__":
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
