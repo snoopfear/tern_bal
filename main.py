@@ -23,13 +23,13 @@ def get_balance(account, proxy):
         
         data = response.json()  # Преобразование ответа в JSON
         
-        # Вывод полного ответа для проверки
-        print(f"Raw response for account {account}: {data}")
+        # Вывод полного ответа для проверки в зелёном цвете
+        print(f"Raw response for account {GREEN}{account}{RESET}: {GREEN}{data}{RESET}")
         
         # Пример: извлечение баланса из поля 'balance'
         return data.get('balance', 'N/A')  # Убедитесь, что используете правильный ключ
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching balance for account {account} using proxy {proxy}: {e}")
+        print(f"Error fetching balance for account {GREEN}{account}{RESET} using proxy {proxy}: {e}")
         return None
 
 def read_wallets(file_path):
@@ -72,5 +72,12 @@ if __name__ == "__main__":
                 append_to_csv([result])
                 results.append({'Account': account, 'Result': balance_info})
         else:
-            print(f"Proxy {proxy} is not working for account {account}. Skipping...")
+            print(f"Proxy {proxy} is not working for account {GREEN}{account}{RESET}. Skipping...")
 
+    # Печать итоговой таблицы
+    if results:
+        df_results = pd.DataFrame(results)
+        print("\nFinal Results:")
+        print(df_results[['Account', 'Result']])
+    else:
+        print("No results to display.")
