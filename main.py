@@ -52,9 +52,6 @@ def get_balance(account, proxy, network=None):
             balance_wei = int(balance_hex, 16)  # Преобразование из hex в wei
             balance_eth = wei_to_eth(balance_wei)  # Преобразование из wei в eth
 
-            # Вывод полного ответа для проверки в зелёном цвете
-            print(f"Raw response for account {GREEN}{account}{RESET} on network {GREEN}{network}{RESET}: {GREEN}{result}{RESET}")
-
             return balance_eth
 
         except requests.exceptions.RequestException as e:
@@ -69,12 +66,7 @@ def get_balance(account, proxy, network=None):
             response.raise_for_status()  # Проверка на успешный ответ
 
             data = response.json()  # Преобразование ответа в JSON
-
-            # Вывод полного ответа для проверки в зелёном цвете
-            print(f"Raw response for account {GREEN}{account}{RESET}: {GREEN}{data}{RESET}")
-
-            # Пример: извлечение баланса из поля 'balance'
-            return data.get('balance', 'N/A')  # Убедитесь, что используете правильный ключ
+            return data.get('BRNBalance', 'N/A')  # Извлечение баланса из поля 'BRNBalance'
 
         except requests.exceptions.RequestException as e:
             print(f"Error fetching balance for account {GREEN}{account}{RESET} using proxy {proxy}: {e}")
@@ -121,46 +113,32 @@ if __name__ == "__main__":
             network_results = {}
 
             if balance_info_pricer is not None:
-                date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print(f"Balance Information from pricer for {GREEN}{account}{RESET}: {GREEN}{balance_info_pricer}{RESET}")
+                network_results['pricer'] = balance_info_pricer
 
-                # Добавляем результат в CSV и в список результатов
-                result = {
-                    'Date': date_now,
-                    'Account': account,
-                    'Network': 'pricer',
-                    'Balance': balance_info_pricer
-                }
-                append_to_csv([result])
-                results.append({'Account': account, 'Results': {'pricer': balance_info_pricer}})
-                
             # Запрос баланса для всех сетей
             for network in NETWORK_URLS:
                 balance_info_network = get_balance(account, proxy, network)
                 
                 if balance_info_network is not None:
-                    date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     network_results[network] = balance_info_network
-                    print(f"Balance Information for {GREEN}{account}{RESET} on {GREEN}{network}{RESET}: {GREEN}{balance_info_network}{RESET}")
-
-                    # Добавляем результат в CSV и в список результатов
-                    result = {
-                        'Date': date_now,
-                        'Account': account,
-                        'Network': network,
-                        'Balance': balance_info_network
-                    }
-                    append_to_csv([result])
-                    results.append({'Account': account, 'Results': network_results})
                 
-            used_proxies.add(proxy)  # Добавляем прокси в набор использованных
+            if network_results:
+                date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                print(f"\nAccount: {GREEN}{account}{RESET}")
+                
+                if 'pricer' in network_results:
+                    print(f"Balance from pricer: {GREEN}{network_results['pricer']}{RESET}")
+                
+                for network, balance in network_results.items():
+                    print(f"Balance on {GREEN}{network}{RESET}: {GREEN}{balance}{RESET}")
+                
+                # Добавляем результат в CSV и в список результатов
+                result = {
+                    'Date': date_now,
+                    'Account': account,
+                    'Results': network_results
+                }
+                append_to_csv([result])
+                results.append({'Account': account, 'Results': network_results})
         else:
             print(f"Proxy {GREEN}{proxy}{RESET} is not working. Skipping...")
-
-    # Печать итоговой таблицы
-    if results:
-        df_results = pd.DataFrame(results)
-        print("\nFinal Results:")
-        print(df_results[['Account', 'Results']])
-    else:
-        print("No results to display.")
